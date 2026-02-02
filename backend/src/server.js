@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -347,7 +348,6 @@ class Executor {
 
   start() {
     const command = `opencode run "${this.task.prompt}" --format json`;
-    const { execSync } = require('child_process');
 
     try {
       const output = execSync(command, {
