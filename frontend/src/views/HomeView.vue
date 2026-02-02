@@ -18,15 +18,19 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, computed } from 'vue'
 import SettingsPanel from '../components/SettingsPanel.vue'
 import TaskQueue from '../components/TaskQueue.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
+import { useWorkspace } from '../composables/useWorkspace'
 
 const taskQueueRef = ref(null)
 const queueRunning = ref(false)
 const concurrency = ref(1)
 const taskOutputs = reactive({})
+
+const { workspaceReady } = useWorkspace()
+const workspaceSelected = computed(() => workspaceReady.value)
 
 let ws = null
 

@@ -3,7 +3,7 @@
     <div class="queue-header">
       <h3>任务队列</h3>
       <div class="queue-actions">
-        <el-button type="primary" size="small" @click="createTask">
+        <el-button type="primary" size="small" @click="createTask" :disabled="!workspaceReady">
           <el-icon><Plus /></el-icon>
           新建任务
         </el-button>
@@ -12,7 +12,7 @@
           size="small"
           @click="startQueue"
           :loading="queueRunning"
-          :disabled="!hasWorkspace || tasks.length === 0"
+          :disabled="!workspaceReady || tasks.length === 0"
         >
           <el-icon><VideoPlay /></el-icon>
           {{ queueRunning ? '执行中...' : '全部执行' }}
@@ -56,11 +56,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import TaskItem from './TaskItem.vue'
 import TaskEditor from './TaskEditor.vue'
 import draggable from 'vuedraggable'
+import { useWorkspace } from '../composables/useWorkspace'
+
+const { workspaceReady } = useWorkspace()
 
 const props = defineProps({
   queueRunning: Boolean,
@@ -74,8 +77,6 @@ const localTasks = ref([])
 const editorVisible = ref(false)
 const editingTask = ref(null)
 const listRef = ref(null)
-
-const hasWorkspace = computed(() => tasks.value.length >= 0)
 
 async function loadTasks() {
   try {

@@ -18,8 +18,9 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { useWorkspace } from '../composables/useWorkspace'
 
-const workspacePath = ref('')
+const { workspacePath, setWorkspace } = useWorkspace()
 const pathInput = ref('')
 const loading = ref(false)
 
@@ -47,7 +48,7 @@ async function confirmWorkspace() {
     const data = await res.json()
 
     if (data.success) {
-      workspacePath.value = data.path
+      setWorkspace(data.path)
       pathInput.value = ''
       ElMessage.success('工作区已打开')
     } else {
@@ -66,7 +67,7 @@ onMounted(async () => {
     const res = await fetch('/api/workspace')
     const data = await res.json()
     if (data.path) {
-      workspacePath.value = data.path
+      setWorkspace(data.path)
     }
   } catch (e) {
     console.log('No workspace selected')
