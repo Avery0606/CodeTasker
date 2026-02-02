@@ -1,0 +1,16 @@
+{
+  "name": "codetasker-backend",
+  "version": "1.0.0",
+  "description": "CodeTasker Backend - Task Queue Manager for OpenCode",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "ws": "^8.14.2",
+    "uuid": "^9.0.1"
+  }
+}
