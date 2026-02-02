@@ -12,6 +12,19 @@ const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
 app.use(express.json());
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
 let currentWorkspace = null;
 let tasks = [];
@@ -62,6 +75,8 @@ app.post('/api/workspace/open', (req, res) => {
   broadcast('workspace:opened', { path: currentWorkspace, taskCount: tasks.length });
   res.json({ success: true, path: currentWorkspace, tasks });
 });
+
+
 
 app.get('/api/workspace', (req, res) => {
   res.json({ path: currentWorkspace, taskCount: tasks.length });
@@ -331,38 +346,31 @@ class Executor {
   }
 
   start() {
-    const command = `opencode run "${this.task.prompt}"`;
-    this.process = require('child_process').exec(command, {
-      cwd: this.workspace,
-      encoding: 'utf8'
-    });
+    const command = `opencode run "${this.task.prompt}" --format json`;
+    const { execSync } = require('child_process');
 
-    let output = '';
+    try {
+      const output = execSync(command, {
+        cwd: this.workspace,
+        encoding: 'utf8'
+      });
 
-    this.process.stdout.on('data', (data) => {
-      output += data;
-      this.emit('output', { key: this.task.uniqueKey, output: data, append: true });
-    });
+      let formattedOutput = output;
+      try {
+        const parsed = JSON.parse(output);
+        formattedOutput = JSON.stringify(parsed, null, 2);
+      } catch (e) {
+      }
 
-    this.process.stderr.on('data', (data) => {
-      output += data;
-      this.emit('output', { key: this.task.uniqueKey, output: data, append: true });
-    });
-
-    this.process.on('close', (code) => {
-      this.emit('complete', { success: code === 0 });
-    });
-
-    this.process.on('error', (err) => {
+      this.emit('output', { key: this.task.uniqueKey, output: formattedOutput, append: false });
+      this.emit('complete', { success: true });
+    } catch (err) {
       this.emit('output', { key: this.task.uniqueKey, output: `Error: ${err.message}`, append: true });
       this.emit('complete', { success: false });
-    });
+    }
   }
 
   kill() {
-    if (this.process) {
-      this.process.kill('SIGTERM');
-    }
   }
 }
 

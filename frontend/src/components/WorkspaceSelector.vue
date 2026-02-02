@@ -1,8 +1,15 @@
 <template>
   <div class="workspace-selector">
-    <el-button type="primary" @click="selectWorkspace" :loading="loading">
+    <el-input
+      v-if="!workspacePath"
+      v-model="pathInput"
+      placeholder="输入目录路径，如 D:\project"
+      style="width: 280px"
+      @keyup.enter="confirmWorkspace"
+    />
+    <el-button type="primary" @click="confirmWorkspace" :loading="loading">
       <el-icon><FolderOpened /></el-icon>
-      {{ workspacePath ? '更换工作区' : '选择工作区' }}
+      {{ workspacePath ? '更换工作区' : '确定' }}
     </el-button>
     <span v-if="workspacePath" class="workspace-path">{{ workspacePath }}</span>
   </div>
@@ -13,33 +20,42 @@ import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 
 const workspacePath = ref('')
+const pathInput = ref('')
 const loading = ref(false)
 
-async function selectWorkspace() {
+async function confirmWorkspace() {
+  const path = pathInput.value.trim()
+  if (!path) {
+    ElMessage.warning('请输入目录路径')
+    return
+  }
+
+  loading.value = true
+
   try {
-    const result = await window.electronAPI?.selectDirectory?.()
-    if (result?.canceled) return
-
-    const path = result.filePaths[0]
-    if (!path) return
-
-    loading.value = true
     const res = await fetch('/api/workspace/open', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ path })
     })
+
+    if (!res.ok) {
+      const errorText = await res.text()
+      throw new Error(`HTTP ${res.status}: ${errorText}`)
+    }
+
     const data = await res.json()
 
     if (data.success) {
       workspacePath.value = data.path
+      pathInput.value = ''
       ElMessage.success('工作区已打开')
     } else {
       ElMessage.error(data.error || '打开工作区失败')
     }
   } catch (e) {
-    ElMessage.error('选择目录失败，请确保已启动后端服务')
-    console.error(e)
+    ElMessage.error(`选择目录失败: ${e.message}`)
+    console.error('Workspace selection error:', e)
   } finally {
     loading.value = false
   }

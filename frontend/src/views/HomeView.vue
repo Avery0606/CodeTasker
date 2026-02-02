@@ -31,11 +31,7 @@ const taskOutputs = reactive({})
 let ws = null
 
 function connectWebSocket() {
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-  const host = window.location.hostname
-  const port = '3000'
-
-  ws = new WebSocket(`${protocol}//${host}:${port}`)
+  ws = new WebSocket('ws://localhost:3000')
 
   ws.onopen = () => {
     console.log('WebSocket connected')
