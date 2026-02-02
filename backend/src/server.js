@@ -355,11 +355,27 @@ class Executor {
         encoding: 'utf8'
       });
 
-      let formattedOutput = output;
-      try {
-        const parsed = JSON.parse(output);
-        formattedOutput = JSON.stringify(parsed, null, 2);
-      } catch (e) {
+      const lines = output.trim().split('\n');
+      let formattedOutput = '';
+
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const parsed = JSON.parse(line);
+          if (parsed.type === 'text' && parsed.part?.text) {
+            formattedOutput += `[${parsed.part.type}] ${parsed.part.text}\n`;
+          } else if (parsed.type === 'step_start' && parsed.part?.snapshot) {
+            formattedOutput += `[开始步骤] ${parsed.part.snapshot}\n`;
+          } else if (parsed.type === 'step_finish') {
+            formattedOutput += `[完成步骤]\n`;
+          }
+        } catch (e) {
+          formattedOutput += line + '\n';
+        }
+      }
+
+      if (!formattedOutput.trim()) {
+        formattedOutput = output;
       }
 
       this.emit('output', { key: this.task.uniqueKey, output: formattedOutput, append: false });
