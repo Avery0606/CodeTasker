@@ -1,2 +1,2 @@
 # CodeTasker
-Control local AI coding agents from your browser: create, queue, monitor code tasks effortlessly.
+从浏览器控制本地AI编程助手：轻松创建、排队、监控代码任务。
