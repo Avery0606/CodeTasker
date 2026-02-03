@@ -51,6 +51,7 @@ async function confirmWorkspace() {
 
     if (data.success) {
       setWorkspace(data.path)
+      await taskStore.loadTasks()
       pathInput.value = ''
       ElMessage.success('工作区已打开')
     } else {
