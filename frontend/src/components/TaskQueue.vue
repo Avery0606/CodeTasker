@@ -135,7 +135,7 @@ defineExpose({ loadTasks })
   background: white;
   border-radius: 8px;
   padding: 15px;
-  height: 100%;
+  height: calc(80vh - 40px);
   display: flex;
   flex-direction: column;
 }
@@ -163,7 +163,6 @@ defineExpose({ loadTasks })
 .task-list {
   flex: 1;
   overflow-y: auto;
-  max-height: calc(100vh - 280px);
   min-height: 200px;
 }
 

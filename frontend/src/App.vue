@@ -59,6 +59,7 @@ html, body, #app {
 
 .app-main {
   padding: 20px;
-  overflow: auto;
+  height: calc(100vh - 60px);
+  overflow: hidden;
 }
 </style>

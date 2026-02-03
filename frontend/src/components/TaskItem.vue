@@ -1,5 +1,5 @@
 <template>
-  <el-card class="task-item" :class="task.status" shadow="hover">
+  <el-card class="task-item" :class="task.status">
     <div class="task-header">
       <el-tag :type="statusType" size="small" effect="dark">{{ statusText }}</el-tag>
       <div class="task-actions">
@@ -67,11 +67,6 @@ function remove() {
 .task-item {
   margin-bottom: 10px;
   cursor: grab;
-  transition: all 0.3s;
-}
-
-.task-item:hover {
-  transform: translateX(5px);
 }
 
 .task-item.running {

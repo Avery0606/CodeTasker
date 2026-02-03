@@ -92,7 +92,7 @@ function handleClear() {
 .console-panel {
   background: #1e1e1e;
   border-radius: 8px;
-  height: 100%;
+  height: calc(90vh - 40px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -121,7 +121,6 @@ function handleClear() {
 
 .console-content {
   flex: 1;
-  max-height: calc(100vh - 280px);
   overflow-y: auto;
   padding: 10px;
   font-family: 'Consolas', 'Monaco', monospace;

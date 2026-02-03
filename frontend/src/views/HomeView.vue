@@ -94,5 +94,7 @@ onUnmounted(() => {
 <style scoped>
 .home-view {
   height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 </style>
