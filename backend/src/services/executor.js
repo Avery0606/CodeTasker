@@ -32,10 +32,15 @@ export class Executor {
 
     this.process = proc;
 
+    proc.on('spawn', () => {
+      console.log('[Executor] process spawned');
+    });
+
     let stdoutBuffer = '';
     let stderrBuffer = '';
 
     proc.stdout.on('data', (chunk) => {
+      console.log('[Executor] stdout:', chunk.length, 'bytes');
       const text = chunk.toString();
       stdoutBuffer += text;
       const lines = stdoutBuffer.split('\n');
@@ -47,6 +52,7 @@ export class Executor {
     });
 
     proc.stderr.on('data', (chunk) => {
+      console.log('[Executor] stderr:', chunk.length, 'bytes');
       const text = chunk.toString();
       stderrBuffer += text;
       const lines = stderrBuffer.split('\n');
@@ -62,6 +68,7 @@ export class Executor {
     });
 
     proc.on('close', (code) => {
+      console.log('[Executor] close:', code);
       if (stdoutBuffer.trim()) {
         this.processLine(stdoutBuffer);
       }
@@ -117,6 +124,7 @@ export class Executor {
       } else if (parsed.type === 'step_finish') {
         output = `[完成步骤]`;
       } else {
+        console.log('[Executor] Unknown type:', parsed.type);
         return;
       }
 
@@ -126,6 +134,7 @@ export class Executor {
         append: true
       });
     } catch (e) {
+      console.log('[Executor] JSON parse failed:', line.substring(0, 100));
     }
   }
 
