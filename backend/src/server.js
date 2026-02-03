@@ -15,6 +15,11 @@ const wss = new WebSocketServer({ server });
 app.use(express.json());
 app.use(logger);
 
+app.use((req, res, next) => {
+  console.log(`[HTTP] ${req.method} ${req.path}`);
+  next();
+});
+
 const wsClients = new Set();
 const broadcast = createBroadcast(wsClients);
 
@@ -31,6 +36,7 @@ app.use('/api/tasks', setupTaskRoutes(state));
 app.use('/api/queue', setupQueueRoutes(state));
 
 app.get('/api/health', (req, res) => {
+  console.log('[HTTP] Health check');
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 

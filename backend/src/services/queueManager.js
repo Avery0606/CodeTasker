@@ -67,6 +67,7 @@ export class QueueManager {
   executeTask(task) {
     task.status = 'running';
     this.runningTasks.set(task.uniqueKey, task);
+    console.log(`[Queue] Executing task: ${task.uniqueKey} - ${task.name}`);
     this.emit('task:started', { key: task.uniqueKey });
     this.emit('queue:status', {
       running: true,
@@ -87,6 +88,7 @@ export class QueueManager {
       task.status = data.success ? 'completed' : 'failed';
       task.completedAt = new Date().toISOString();
       this.activeExecutors = this.activeExecutors.filter(e => e !== executor);
+      console.log(`[Queue] Task completed: ${task.uniqueKey}, success=${data.success}`);
       this.emit('task:completed', { key: task.uniqueKey, success: data.success });
       this.processQueue();
     });

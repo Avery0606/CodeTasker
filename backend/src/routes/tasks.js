@@ -13,6 +13,7 @@ export function setupTaskRoutes(state) {
 
   router.get('/', (req, res) => {
     tasksRef.value = loadTasks(currentWorkspaceRef.value);
+    console.log(`[Task] Loaded ${tasksRef.value.length} tasks`);
     res.json({ tasks: tasksRef.value });
   });
 
@@ -38,6 +39,7 @@ export function setupTaskRoutes(state) {
 
   router.put('/order', (req, res) => {
     const { orderedKeys } = req.body;
+    console.log(`[Task] Reordering ${orderedKeys.length} tasks`);
     const newTasks = [];
     orderedKeys.forEach(key => {
       const task = tasksRef.value.find(t => t.uniqueKey === key);
@@ -57,11 +59,13 @@ export function setupTaskRoutes(state) {
     const { name, prompt } = req.body;
     const task = tasksRef.value.find(t => t.uniqueKey === key);
     if (!task) {
+      console.error(`[Task] Update failed - not found: ${key}`);
       return res.status(404).json({ error: 'Task not found' });
     }
     if (name !== undefined) task.name = name;
     if (prompt !== undefined) task.prompt = prompt;
     saveTasks(tasksRef.value, currentWorkspaceRef.value);
+    console.log(`[Task] Updated: ${key}`);
     broadcast('task:updated', task);
     res.json(task);
   });
@@ -116,6 +120,7 @@ export function setupTaskRoutes(state) {
       task.output = output;
     }
     saveTasks(tasksRef.value, currentWorkspaceRef.value);
+    console.log(`[Task] Output updated: ${key}, length=${task.output.length}`);
     broadcast('task:output', { key, output, append });
     res.json(task);
   });

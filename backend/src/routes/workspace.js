@@ -21,6 +21,7 @@ export function setupWorkspaceRoutes(state) {
   });
 
   router.get('/', (req, res) => {
+    console.log(`[Workspace] Get info: ${currentWorkspaceRef.value || 'none'}`);
     res.json({ path: currentWorkspaceRef.value, taskCount: tasksRef.value.length });
   });
 

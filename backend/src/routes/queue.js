@@ -41,6 +41,7 @@ export function setupQueueRoutes(state) {
   router.put('/concurrency', (req, res) => {
     const { concurrency } = req.body;
     if (queueManager) {
+      console.log(`[Queue] Concurrency changed: ${queueManager.concurrency} -> ${concurrency}`);
       queueManager.setConcurrency(concurrency);
     }
     res.json({ success: true });
@@ -48,6 +49,7 @@ export function setupQueueRoutes(state) {
 
   router.get('/status', (req, res) => {
     if (queueManager) {
+      console.log(`[Queue] Status: running=${queueManager.running}, running=${queueManager.runningTasks.size}, pending=${queueManager.pendingTasks.length}`);
       res.json({
         running: queueManager.running,
         concurrency: queueManager.concurrency,
