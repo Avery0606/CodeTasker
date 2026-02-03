@@ -14,6 +14,7 @@ const wss = new WebSocketServer({ server });
 
 app.use(express.json());
 app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type');
@@ -35,11 +36,13 @@ const TASKS_FILE = 'code-tasks.json';
 
 function broadcast(event, data) {
   const message = JSON.stringify({ event, data });
+  const clientCount = wsClients.size;
   wsClients.forEach(client => {
     if (client.readyState === 1) {
       client.send(message);
     }
   });
+  console.log(`[Broadcast] ${event} to ${clientCount} clients`);
 }
 
 function saveTasks() {
@@ -68,11 +71,14 @@ function generateKey() {
 
 app.post('/api/workspace/open', (req, res) => {
   const { path: workspacePath } = req.body;
+  console.log(`[Workspace] Opening: ${workspacePath}`);
   if (!fs.existsSync(workspacePath) || !fs.statSync(workspacePath).isDirectory()) {
+    console.error(`[Workspace] Invalid path: ${workspacePath}`);
     return res.status(400).json({ error: 'Invalid workspace path' });
   }
   currentWorkspace = workspacePath;
   tasks = loadTasks();
+  console.log(`[Workspace] Loaded ${tasks.length} tasks`);
   broadcast('workspace:opened', { path: currentWorkspace, taskCount: tasks.length });
   res.json({ success: true, path: currentWorkspace, tasks });
 });
@@ -103,6 +109,7 @@ app.post('/api/tasks/create', (req, res) => {
   };
   tasks.push(task);
   saveTasks();
+  console.log(`[Task] Created: ${task.uniqueKey} - ${name}`);
   broadcast('task:created', task);
   res.json(task);
 });
@@ -141,11 +148,14 @@ app.delete('/api/tasks/:key', (req, res) => {
   const { key } = req.params;
   const index = tasks.findIndex(t => t.uniqueKey === key);
   if (index === -1) {
+    console.error(`[Task] Delete failed - not found: ${key}`);
     return res.status(404).json({ error: 'Task not found' });
   }
+  const taskName = tasks[index]?.name || 'unknown';
   tasks.splice(index, 1);
   tasks.forEach((t, i) => t.order = i);
   saveTasks();
+  console.log(`[Task] Deleted: ${key} - ${taskName}`);
   broadcast('task:deleted', { key });
   res.json({ success: true });
 });
@@ -155,8 +165,10 @@ app.put('/api/tasks/:key/status', (req, res) => {
   const { status } = req.body;
   const task = tasks.find(t => t.uniqueKey === key);
   if (!task) {
+    console.error(`[Task] Status update failed - not found: ${key}`);
     return res.status(404).json({ error: 'Task not found' });
   }
+  const oldStatus = task.status;
   task.status = status;
   if (status === 'running') {
     task.startedAt = new Date().toISOString();
@@ -164,6 +176,7 @@ app.put('/api/tasks/:key/status', (req, res) => {
     task.completedAt = new Date().toISOString();
   }
   saveTasks();
+  console.log(`[Task] Status: ${key} ${oldStatus} -> ${status}`);
   broadcast('task:status', { key, status });
   res.json(task);
 });
@@ -190,9 +203,11 @@ let queueManager = null;
 app.post('/api/queue/start', (req, res) => {
   const { concurrency = 1 } = req.body;
   if (!currentWorkspace) {
+    console.error('[Queue] Start failed - no workspace');
     return res.status(400).json({ error: 'No workspace selected' });
   }
   if (queueManager && queueManager.running) {
+    console.warn('[Queue] Start failed - already running');
     return res.status(400).json({ error: 'Queue already running' });
   }
   queueManager = new QueueManager(concurrency, currentWorkspace, tasks, broadcast);
@@ -202,13 +217,16 @@ app.post('/api/queue/start', (req, res) => {
   queueManager.on('task:failed', (data) => broadcast('task:failed', data));
   queueManager.on('queue:status', (data) => broadcast('queue:status', data));
   queueManager.start();
+  console.log(`[Queue] Started with concurrency: ${concurrency}`);
   res.json({ success: true, concurrency });
 });
 
 app.post('/api/queue/stop', (req, res) => {
   if (queueManager) {
+    console.log('[Queue] Stopping...');
     queueManager.stop();
     queueManager = null;
+    console.log('[Queue] Stopped');
   }
   res.json({ success: true });
 });
@@ -349,6 +367,8 @@ class Executor {
 
   start() {
     const command = `opencode run "${this.task.prompt}" --format json`;
+    console.log(`[Executor] Starting task: ${this.task.uniqueKey} - ${this.task.name}`);
+    console.log(`[Executor] Command: ${command}`);
 
     try {
       const output = execSync(command, {
@@ -381,7 +401,9 @@ class Executor {
 
       this.emit('output', { key: this.task.uniqueKey, output: formattedOutput, append: false });
       this.emit('complete', { success: true });
+      console.log(`[Executor] Task completed: ${this.task.uniqueKey}`);
     } catch (err) {
+      console.error(`[Executor] Task failed: ${this.task.uniqueKey} - ${err.message}`);
       this.emit('output', { key: this.task.uniqueKey, output: `Error: ${err.message}`, append: true });
       this.emit('complete', { success: false });
     }
@@ -393,7 +415,11 @@ class Executor {
 
 wss.on('connection', (ws) => {
   wsClients.add(ws);
-  ws.on('close', () => wsClients.delete(ws));
+  console.log(`[WebSocket] Client connected. Total: ${wsClients.size}`);
+  ws.on('close', () => {
+    wsClients.delete(ws);
+    console.log(`[WebSocket] Client disconnected. Total: ${wsClients.size}`);
+  });
 });
 
 const PORT = process.env.PORT || 3000;
