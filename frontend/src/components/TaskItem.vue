@@ -67,6 +67,12 @@ function remove() {
 .task-item {
   margin-bottom: 10px;
   cursor: grab;
+  transition: all 0.2s ease;
+}
+
+.task-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(64, 158, 255, 0.2);
 }
 
 .task-item.running {
