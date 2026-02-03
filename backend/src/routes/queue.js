@@ -17,7 +17,7 @@ export function setupQueueRoutes(state) {
       console.warn('[Queue] Start failed - already running');
       return res.status(400).json({ error: 'Queue already running' });
     }
-    queueManager = new QueueManager(concurrency, currentWorkspaceRef.value, tasksRef.value, broadcast);
+    queueManager = new QueueManager(concurrency, currentWorkspaceRef.value, tasksRef, broadcast);
     queueManager.on('task:output', (data) => broadcast('task:output', data));
     queueManager.on('task:started', (data) => broadcast('task:started', data));
     queueManager.on('task:completed', (data) => broadcast('task:completed', data));
