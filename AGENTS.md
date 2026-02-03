@@ -1,80 +1,80 @@
 # AGENTS.md
 
-This file provides guidelines for AI agents working in this codebase.
+本文档为在此代码库中工作的 AI Agent 提供指导规范。
 
-## Build Commands
+## 构建命令
 
-### Frontend (Vue 3 + Vite)
+### 前端 (Vue 3 + Vite)
 ```bash
 cd frontend
-npm install          # Install dependencies
-npm run dev          # Start development server (http://localhost:5173)
-npm run build        # Build for production
-npm run preview      # Preview production build
+npm install          # 安装依赖
+npm run dev          # 启动开发服务器 (http://localhost:5173)
+npm run build        # 构建生产版本
+npm run preview      # 预览生产版本
 ```
 
-### Backend (Express.js)
+### 后端 (Express.js)
 ```bash
 cd backend
-npm install          # Install dependencies
-npm start            # Start production server (http://localhost:3000)
-npm run dev          # Start with auto-reload (--watch mode)
+npm install          # 安装依赖
+npm start            # 启动生产服务器 (http://localhost:3000)
+npm run dev          # 启动自动重载模式 (--watch)
 ```
 
-### Full Stack
-Start backend first, then frontend:
+### 全栈启动
+先启动后端，再启动前端：
 ```bash
 cd backend && npm start
 cd frontend && npm run dev
 ```
 
-## Testing Commands
+## 测试命令
 
-There are currently no test frameworks configured. To add tests:
-- Frontend: Install Vitest (`npm install -D vitest`) or Jest
-- Backend: Install Jest (`npm install -D jest`)
+当前未配置测试框架。如需添加测试：
+- 前端：安装 Vitest (`npm install -D vitest`) 或 Jest
+- 后端：安装 Jest (`npm install -D jest`)
 
-For single test runs:
+单测试运行：
 ```bash
-# With Vitest
+# Vitest
 npm run test -- --run
 
-# With Jest
+# Jest
 npm test -- --testPathPattern=filename
 ```
 
-## Linting Commands
+## 代码检查命令
 
-No linting configured. Recommended setup:
+当前未配置 linting。推荐配置：
 ```bash
-# Frontend (ESLint)
+# 前端 (ESLint)
 npx eslint src --ext .vue,.js,.ts --fix
 
-# Backend (ESLint)
+# 后端 (ESLint)
 npx eslint src --ext .js --fix
 ```
 
-## Code Style Guidelines
+## 代码风格规范
 
-### Imports
-- Use ES module syntax (`import`/`export`)
-- Group imports: built-in → third-party → local
-- Use absolute imports from package names, relative paths for local files
+### 导入
+- 使用 ES 模块语法 (`import`/`export`)
+- 分组导入：内置模块 → 第三方模块 → 本地模块
+- 包名使用绝对路径导入，本地文件使用相对路径
 ```javascript
 import express from 'express'
 import { WebSocketServer } from 'ws'
 import { useTaskStore } from '@/stores/taskStore'
 ```
 
-### Formatting
-- Use 2-space indentation
-- No semicolons at line ends
-- Use single quotes for strings
-- One blank line between function definitions
-- Max line length: 100 characters
+### 格式
+- 使用 2 空格缩进
+- 行尾不加分号
+- 字符串使用单引号
+- 函数定义之间空一行
+- 最大行长度：100 字符
 
-### Types
-- No TypeScript in this project; use JSDoc for type hints if needed
+### 类型
+- 本项目不使用 TypeScript；如需类型提示使用 JSDoc
 ```javascript
 /**
  * @param {string} path
@@ -83,61 +83,61 @@ import { useTaskStore } from '@/stores/taskStore'
 async function openWorkspace(path) { }
 ```
 
-### Naming Conventions
-- **Variables/functions**: camelCase (`taskList`, `loadTasks`)
-- **Constants**: SCREAMING_SASE (`TASKS_FILE`, `PORT`)
-- **Classes**: PascalCase (`QueueManager`, `Executor`)
-- **Vue components**: PascalCase files (`TaskQueue.vue`)
-- **Composable functions**: camelCase with `use` prefix (`useWebSocket`)
+### 命名规范
+- **变量/函数**：camelCase (`taskList`, `loadTasks`)
+- **常量**：SCREAMING_SNAKE_CASE (`TASKS_FILE`, `PORT`)
+- **类**：PascalCase (`QueueManager`, `Executor`)
+- **Vue 组件**：PascalCase 文件名 (`TaskQueue.vue`)
+- **组合式函数**：camelCase 以 `use` 前缀开头 (`useWebSocket`)
 
-### Vue Composition API
-- Use `<script setup>` syntax for components
-- Use `defineStore` with composition function pattern
-- Use composables for shared logic
+### Vue 组合式 API
+- 组件使用 `<script setup>` 语法
+- 使用 `defineStore` 组合式函数模式
+- 使用 composables 共享逻辑
 ```javascript
 export const useTaskStore = defineStore('tasks', () => {
   const tasks = ref([])
-  // ... functions
+  // ... 函数
   return { tasks, /* ... */ }
 })
 ```
 
-### Error Handling
-- Wrap async operations in try/catch blocks
-- Log errors with `console.error()`
-- Return `null` or `false` on failure, let caller handle UI feedback
-- Use proper HTTP status codes in API responses (400, 404, 500)
+### 错误处理
+- 异步操作使用 try/catch 包裹
+- 使用 `console.error()` 记录错误
+- 失败时返回 `null` 或 `false`，由调用方处理 UI 反馈
+- API 响应使用正确的 HTTP 状态码 (400, 404, 500)
 ```javascript
 try {
   const res = await fetch('/api/tasks')
   return await res.json()
 } catch (e) {
-  console.error('Load tasks failed:', e)
+  console.error('加载任务失败:', e)
   return []
 }
 ```
 
-### File Organization
-- `backend/src/`: server.js, services/, utils/
-- `frontend/src/`: views/, components/, stores/, composables/
-- Keep files under 300 lines; split larger files
+### 文件组织
+- `backend/src/`：server.js, services/, utils/
+- `frontend/src/`：views/, components/, stores/, composables/
+- 文件不超过 300 行；大型文件需拆分
 
-### API Design
-- RESTful endpoints with proper HTTP methods
-- WebSocket for real-time updates (task output, status changes)
-- Consistent response format: `{ success: boolean, data?: any, error?: string }`
-- Broadcast updates to all connected clients via `broadcast()`
+### API 设计
+- RESTful 端点使用正确的 HTTP 方法
+- 使用 WebSocket 实现实时更新（任务输出、状态变更）
+- 统一响应格式：`{ success: boolean, data?: any, error?: string }`
+- 通过 `broadcast()` 向所有连接的客户端广播更新
 
-### Project Conventions
-- Use `code-tasks.json` for task persistence
-- Task status values: `pending`, `running`, `completed`, `failed`
-- Use `uuid` for task unique identifiers
-- DateTime in ISO 8601 format
-- Chinese comments acceptable for Chinese-speaking team
+### 项目规范
+- 使用 `code-tasks.json` 持久化任务数据
+- 任务状态值：`pending`, `running`, `completed`, `failed`
+- 使用 `uuid` 作为任务唯一标识
+- 日期时间使用 ISO 8601 格式
+- 允许中文注释（面向中文团队）
 
-## Development Workflow
+## 开发流程
 
-1. Backend changes: restart the Express server
-2. Frontend changes: Vite HMR updates automatically
-3. Test changes manually via browser at http://localhost:5173
-4. No CI/CD pipeline currently configured
+1. 后端修改：重启 Express 服务器
+2. 前端修改：Vite HMR 自动更新
+3. 手动测试：浏览器访问 http://localhost:5173
+4. 当前未配置 CI/CD 流水线
