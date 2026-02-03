@@ -19,6 +19,12 @@ export class Executor {
   }
 
   start() {
+    this.emit('output', {
+      key: this.task.uniqueKey,
+      output: `-------任务开始：${this.task.name}-------`,
+      append: true
+    });
+
     const fullCommand = `opencode run "${this.task.prompt.replace(/"/g, '\\"')}" --format json`;
 
     console.log(`[Executor] Starting task: ${this.task.uniqueKey} - ${this.task.name}`);
@@ -64,15 +70,11 @@ export class Executor {
     });
 
     proc.on('close', (code) => {
-      console.log('[Executor] close:', code);
-      if (stderrBuffer.trim()) {
-        this.emit('output', {
-          key: this.task.uniqueKey,
-          output: `[stderr] ${stderrBuffer}\n`,
-          append: true
-        });
-      }
-
+      this.emit('output', {
+      key: this.task.uniqueKey,
+      output: `-------任务结束-------`,
+      append: true
+    });
       this.emit('complete', { success: true });
     });
 

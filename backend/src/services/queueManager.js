@@ -80,7 +80,6 @@ export class QueueManager {
       task.status = 'running';
       task.startedAt = new Date().toISOString();
       saveTasks(this.tasksRef.value, this.workspace);
-      console.log('[Queue] Task started:', task.name, '- status:', task.status);
       this.emit('task:started', { key: task.uniqueKey });
 
       const executor = new Executor(this.workspace, task);
