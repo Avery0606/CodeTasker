@@ -155,6 +155,7 @@ defineExpose({ loadTasks })
 .task-list {
   flex: 1;
   overflow-y: auto;
+  max-height: calc(100vh - 280px);
   min-height: 200px;
 }
 

@@ -2,59 +2,90 @@
   <div class="console-panel">
     <div class="console-header">
       <h3>实时终端</h3>
-      <el-button size="small" @click="clearConsole" :disabled="outputs.length === 0">
-        <el-icon><Delete /></el-icon>
-        清空
-      </el-button>
+      <div class="header-controls">
+        <el-select
+          v-model="selectedTaskKey"
+          placeholder="请选择任务"
+          size="small"
+          clearable
+          style="width: 200px">
+          <el-option
+            v-for="task in taskOptions"
+            :key="task.value"
+            :label="task.label"
+            :value="task.value" />
+        </el-select>
+        <el-button size="small" @click="handleClear" :disabled="!selectedTaskKey">
+          <el-icon><Delete /></el-icon>
+          清空
+        </el-button>
+      </div>
     </div>
 
-    <div class="console-content" ref="consoleRef">
-      <div v-if="outputs.length === 0" class="console-empty">
+    <div class="console-content" ref="consoleContainerRef">
+      <div v-if="!selectedTaskKey" class="console-placeholder">
+        <el-empty description="请选择任务" :image-size="60" />
+      </div>
+      <div v-else-if="displayLines.length === 0" class="console-placeholder">
         <el-empty description="暂无输出" :image-size="60" />
       </div>
-      <div v-for="(item, index) in outputs" :key="index" class="console-line">
-        <span class="timestamp">{{ formatTime(item.time) }}</span>
-        <span class="output-text">{{ item.text }}</span>
-      </div>
+      <template v-else>
+        <div v-for="(line, index) in displayLines" :key="index" class="console-line">
+          <span class="timestamp">{{ formatTimestamp(line.timestamp) }}</span>
+          <span class="output-text">{{ line.content }}</span>
+        </div>
+      </template>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, nextTick } from 'vue'
+import { ref, computed } from 'vue'
+import { Delete } from '@element-plus/icons-vue'
 
 const props = defineProps({
-  taskOutputs: Object
+  taskOutputs: {
+    type: Object,
+    default: () => ({})
+  },
+  tasks: {
+    type: Array,
+    default: () => ([])
+  }
 })
 
-const outputs = ref([])
-const consoleRef = ref(null)
+const selectedTaskKey = ref(null)
+const consoleContainerRef = ref(null)
 
-function formatTime(time) {
+const taskOptions = computed(() => {
+  return props.tasks.map(task => ({
+    label: task.name,
+    value: task.uniqueKey
+  }))
+})
+
+const currentTaskOutput = computed(() => {
+  if (!selectedTaskKey.value) return null
+  return props.taskOutputs[selectedTaskKey.value] || null
+})
+
+const displayLines = computed(() => {
+  const output = currentTaskOutput.value
+  if (!output?.output) return []
+  return [{
+    timestamp: output.lastUpdate,
+    content: output.output
+  }]
+})
+
+function formatTimestamp(time) {
   if (!time) return ''
   return new Date(time).toLocaleTimeString('zh-CN', { hour12: false })
 }
 
-function clearConsole() {
-  outputs.value = []
+function handleClear() {
+  selectedTaskKey.value = null
 }
-
-watch(() => props.taskOutputs, (newOutputs) => {
-  outputs.value = []
-  Object.entries(newOutputs).forEach(([key, data]) => {
-    if (data?.output) {
-      outputs.value.push({
-        time: data.lastUpdate || new Date(),
-        text: `[Task ${key.slice(0, 8)}] ${data.output}`
-      })
-    }
-  })
-  nextTick(() => {
-    if (consoleRef.value) {
-      consoleRef.value.scrollTop = consoleRef.value.scrollHeight
-    }
-  })
-}, { deep: true })
 </script>
 
 <style scoped>
@@ -82,15 +113,22 @@ watch(() => props.taskOutputs, (newOutputs) => {
   color: #e0e0e0;
 }
 
+.header-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
 .console-content {
   flex: 1;
+  max-height: calc(100vh - 280px);
   overflow-y: auto;
   padding: 10px;
   font-family: 'Consolas', 'Monaco', monospace;
   font-size: 13px;
 }
 
-.console-empty {
+.console-placeholder {
   height: 100%;
   display: flex;
   align-items: center;

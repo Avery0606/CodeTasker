@@ -6,7 +6,7 @@
         <TaskQueue ref="taskQueueRef" />
       </el-col>
       <el-col :span="12">
-        <ConsolePanel :task-outputs="taskOutputs" />
+        <ConsolePanel :task-outputs="taskOutputsMap" :tasks="tasksFromStore" />
       </el-col>
     </el-row>
   </div>
@@ -21,9 +21,9 @@ import ConsolePanel from '../components/ConsolePanel.vue'
 import { useTaskStore } from '../stores/taskStore'
 
 const taskQueueRef = ref(null)
-const taskOutputs = reactive({})
 const taskStore = useTaskStore()
-const { queueRunning, concurrency } = storeToRefs(taskStore)
+const { tasks: tasksFromStore, queueRunning } = storeToRefs(taskStore)
+const taskOutputsMap = reactive({})
 
 let ws = null
 
@@ -63,15 +63,15 @@ function handleWebSocketMessage(eventName, data) {
       break
 
     case 'task:output':
-      if (!taskOutputs[data.key]) {
-        taskOutputs[data.key] = { output: '' }
+      if (!taskOutputsMap[data.key]) {
+        taskOutputsMap[data.key] = { output: '' }
       }
       if (data.append) {
-        taskOutputs[data.key].output += data.output
+        taskOutputsMap[data.key].output += data.output
       } else {
-        taskOutputs[data.key].output = data.output
+        taskOutputsMap[data.key].output = data.output
       }
-      taskOutputs[data.key].lastUpdate = new Date()
+      taskOutputsMap[data.key].lastUpdate = new Date()
       break
 
     case 'queue:status':
