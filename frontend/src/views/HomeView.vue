@@ -2,13 +2,8 @@
   <div class="home-view">
     <el-row :gutter="20">
       <el-col :span="12">
-        <SettingsPanel v-model="concurrency" />
-        <TaskQueue
-          ref="taskQueueRef"
-          :queue-running="queueRunning"
-          :concurrency="concurrency"
-          @queue-change="onQueueChange"
-        />
+        <SettingsPanel />
+        <TaskQueue ref="taskQueueRef" />
       </el-col>
       <el-col :span="12">
         <ConsolePanel :task-outputs="taskOutputs" />
@@ -18,19 +13,17 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted, computed } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import SettingsPanel from '../components/SettingsPanel.vue'
 import TaskQueue from '../components/TaskQueue.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
-import { useWorkspace } from '../composables/useWorkspace'
+import { useTaskStore } from '../stores/taskStore'
 
 const taskQueueRef = ref(null)
-const queueRunning = ref(false)
-const concurrency = ref(1)
 const taskOutputs = reactive({})
-
-const { workspaceReady } = useWorkspace()
-const workspaceSelected = computed(() => workspaceReady.value)
+const taskStore = useTaskStore()
+const { queueRunning, concurrency } = storeToRefs(taskStore)
 
 let ws = null
 
@@ -63,7 +56,10 @@ function handleWebSocketMessage(eventName, data) {
     case 'task:deleted':
     case 'task:status':
     case 'tasks:reordered':
-      taskQueueRef.value?.loadTasks()
+    case 'task:started':
+    case 'task:completed':
+    case 'task:failed':
+      taskStore.loadTasks()
       break
 
     case 'task:output':
@@ -78,27 +74,10 @@ function handleWebSocketMessage(eventName, data) {
       taskOutputs[data.key].lastUpdate = new Date()
       break
 
-    case 'task:started':
-      if (taskQueueRef.value) {
-        taskQueueRef.value.loadTasks()
-      }
-      break
-
-    case 'task:completed':
-    case 'task:failed':
-      if (taskQueueRef.value) {
-        taskQueueRef.value.loadTasks()
-      }
-      break
-
     case 'queue:status':
       queueRunning.value = data.running
       break
   }
-}
-
-function onQueueChange(running) {
-  queueRunning.value = running
 }
 
 onMounted(() => {

@@ -1,11 +1,13 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 export const useTaskStore = defineStore('tasks', () => {
   const tasks = ref([])
   const workspacePath = ref('')
   const queueRunning = ref(false)
   const concurrency = ref(1)
+
+  const localTasks = computed(() => [...tasks.value])
 
   async function loadTasks() {
     try {
@@ -100,6 +102,10 @@ export const useTaskStore = defineStore('tasks', () => {
     }
   }
 
+  function updateLocalTasks(newTasks) {
+    tasks.value = [...newTasks]
+  }
+
   async function startQueue() {
     try {
       await fetch('/api/queue/start', {
@@ -146,12 +152,14 @@ export const useTaskStore = defineStore('tasks', () => {
     workspacePath,
     queueRunning,
     concurrency,
+    localTasks,
     loadTasks,
     openWorkspace,
     addTask,
     updateTask,
     deleteTask,
     reorderTasks,
+    updateLocalTasks,
     startQueue,
     stopQueue,
     setConcurrency

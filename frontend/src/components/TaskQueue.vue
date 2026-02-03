@@ -56,42 +56,23 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { storeToRefs } from 'pinia'
 import TaskItem from './TaskItem.vue'
 import TaskEditor from './TaskEditor.vue'
 import draggable from 'vuedraggable'
+import { useTaskStore } from '../stores/taskStore'
 import { useWorkspace } from '../composables/useWorkspace'
 
 const { workspaceReady } = useWorkspace()
+const taskStore = useTaskStore()
+const { tasks, localTasks, queueRunning, concurrency } = storeToRefs(taskStore)
+const { loadTasks, startQueue, stopQueue, reorderTasks, updateLocalTasks } = taskStore
 
-const props = defineProps({
-  queueRunning: Boolean,
-  concurrency: Number
-})
-
-const emit = defineEmits(['queue-change'])
-
-const tasks = ref([])
-const localTasks = ref([])
 const editorVisible = ref(false)
 const editingTask = ref(null)
 const listRef = ref(null)
-
-async function loadTasks() {
-  try {
-    const res = await fetch('/api/tasks')
-    const data = await res.json()
-    tasks.value = data.tasks || []
-    localTasks.value = [...tasks.value]
-  } catch (e) {
-    console.error('Load tasks failed:', e)
-  }
-}
-
-watch(tasks, (newTasks) => {
-  localTasks.value = [...newTasks]
-}, { deep: true })
 
 function createTask() {
   editingTask.value = null
@@ -129,35 +110,10 @@ async function onDragEnd() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ orderedKeys })
     })
-    tasks.value = [...localTasks.value]
+    updateLocalTasks(localTasks.value)
   } catch (e) {
     ElMessage.error('排序保存失败')
     loadTasks()
-  }
-}
-
-async function startQueue() {
-  try {
-    const res = await fetch('/api/queue/start', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ concurrency: props.concurrency })
-    })
-    if (res.ok) {
-      emit('queue-change', true)
-      loadTasks()
-    }
-  } catch (e) {
-    ElMessage.error('启动失败')
-  }
-}
-
-async function stopQueue() {
-  try {
-    await fetch('/api/queue/stop', { method: 'POST' })
-    emit('queue-change', false)
-  } catch (e) {
-    ElMessage.error('停止失败')
   }
 }
 

@@ -10,36 +10,21 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useTaskStore } from '../stores/taskStore'
 import { useWorkspace } from '../composables/useWorkspace'
 
 const { workspaceReady } = useWorkspace()
+const taskStore = useTaskStore()
+const { concurrency } = storeToRefs(taskStore)
+const { setConcurrency } = taskStore
 
-const props = defineProps({
-  modelValue: Number,
-  disabled: {
-    type: Boolean,
-    default: false
-  }
-})
-
-const emit = defineEmits(['update:modelValue'])
-
-const concurrency = ref(props.modelValue || 1)
-const isDisabled = computed(() => props.disabled || !workspaceReady.value)
+const isDisabled = computed(() => !workspaceReady.value)
 
 async function updateConcurrency(val) {
   if (!workspaceReady.value) return
-  try {
-    await fetch('/api/queue/concurrency', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ concurrency: val })
-    })
-    emit('update:modelValue', val)
-  } catch (e) {
-    console.error('Update concurrency failed:', e)
-  }
+  await setConcurrency(val)
 }
 </script>
 
