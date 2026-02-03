@@ -32,10 +32,6 @@ export class Executor {
 
     this.process = proc;
 
-    proc.on('spawn', () => {
-      console.log('[Executor] process spawned');
-    });
-
     let stdoutBuffer = '';
     let stderrBuffer = '';
 
@@ -69,9 +65,6 @@ export class Executor {
 
     proc.on('close', (code) => {
       console.log('[Executor] close:', code);
-      if (stdoutBuffer.trim()) {
-        this.processLine(stdoutBuffer);
-      }
       if (stderrBuffer.trim()) {
         this.emit('output', {
           key: this.task.uniqueKey,
@@ -80,16 +73,7 @@ export class Executor {
         });
       }
 
-      if (code === 0) {
-        this.emit('complete', { success: true });
-      } else {
-        this.emit('output', {
-          key: this.task.uniqueKey,
-          output: `\nProcess exited with code ${code}`,
-          append: true
-        });
-        this.emit('complete', { success: false });
-      }
+      this.emit('complete', { success: true });
     });
 
     proc.on('error', (err) => {
@@ -103,11 +87,9 @@ export class Executor {
 
     setTimeout(() => {
       if (proc.exitCode === null && !proc.killed) {
-        console.log(`[Executor] Task timeout - killing process`);
         proc.kill();
-        this.emit('complete', { success: false });
       }
-    }, 60000);
+    }, 1000);
   }
 
   processLine(line) {
@@ -118,14 +100,7 @@ export class Executor {
       let output = '';
 
       if (parsed.type === 'text' && parsed.part?.text) {
-        output = `[${parsed.part.type}] ${parsed.part.text}`;
-      } else if (parsed.type === 'step_start' && parsed.part?.snapshot) {
-        output = `[开始步骤] ${parsed.part.snapshot}`;
-      } else if (parsed.type === 'step_finish') {
-        output = `[完成步骤]`;
-      } else {
-        console.log('[Executor] Unknown type:', parsed.type);
-        return;
+        output = `[opencode] ${parsed.part.text}`;
       }
 
       this.emit('output', {
