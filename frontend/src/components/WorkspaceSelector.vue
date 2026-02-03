@@ -7,9 +7,20 @@
       style="width: 280px"
       @keyup.enter="confirmWorkspace"
     />
-    <el-button type="primary" @click="confirmWorkspace" :loading="loading">
-      <el-icon><FolderOpened /></el-icon>
-      {{ workspacePath ? '更换工作区' : '确定' }}
+    <el-button
+      v-if="workspacePath"
+      type="warning"
+      @click="clearWorkspace"
+    >
+      更换工作区
+    </el-button>
+    <el-button
+      v-else
+      type="primary"
+      @click="confirmWorkspace"
+      :loading="loading"
+    >
+      确定
     </el-button>
     <span v-if="workspacePath" class="workspace-path">{{ workspacePath }}</span>
   </div>
@@ -21,7 +32,7 @@ import { ElMessage } from 'element-plus'
 import { useWorkspace } from '../composables/useWorkspace'
 import { useTaskStore } from '../stores/taskStore'
 
-const { workspacePath, setWorkspace } = useWorkspace()
+const { workspacePath, setWorkspace, clearWorkspace } = useWorkspace()
 const taskStore = useTaskStore()
 const pathInput = ref('')
 const loading = ref(false)
