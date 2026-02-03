@@ -7,6 +7,10 @@
           <el-icon><Plus /></el-icon>
           新建任务
         </el-button>
+        <el-button type="info" size="small" @click="batchImportVisible = true" :disabled="!workspaceReady">
+          <el-icon><Upload /></el-icon>
+          批量导入
+        </el-button>
         <el-button
           type="success"
           size="small"
@@ -52,6 +56,7 @@
     </div>
 
     <TaskEditor v-model="editorVisible" :task="editingTask" />
+    <BatchImportDialog v-model="batchImportVisible" @imported="loadTasks" />
   </div>
 </template>
 
@@ -59,8 +64,10 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { storeToRefs } from 'pinia'
+import { Plus, VideoPlay, VideoPause, Upload } from '@element-plus/icons-vue'
 import TaskItem from './TaskItem.vue'
 import TaskEditor from './TaskEditor.vue'
+import BatchImportDialog from './BatchImportDialog.vue'
 import draggable from 'vuedraggable'
 import { useTaskStore } from '../stores/taskStore'
 import { useWorkspace } from '../composables/useWorkspace'
@@ -73,6 +80,7 @@ const { loadTasks, startQueue, stopQueue, reorderTasks, updateLocalTasks } = tas
 const editorVisible = ref(false)
 const editingTask = ref(null)
 const listRef = ref(null)
+const batchImportVisible = ref(false)
 
 function createTask() {
   editingTask.value = null

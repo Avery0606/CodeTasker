@@ -86,6 +86,46 @@ export function setupTaskRoutes(state) {
     res.json({ success: true });
   });
 
+  router.post('/batch', (req, res) => {
+    const { tasks } = req.body;
+    if (!Array.isArray(tasks)) {
+      return res.status(400).json({ success: false, error: 'tasks必须是数组' });
+    }
+
+    const results = [];
+    const baseOrder = tasksRef.value.length;
+
+    for (let i = 0; i < tasks.length; i++) {
+      const item = tasks[i];
+      if (!item.taskName || !item.prompt) {
+        results.push({ success: false, taskName: item.taskName || 'unknown', error: '缺少必要字段' });
+        continue;
+      }
+
+      const task = {
+        uniqueKey: generateKey(),
+        name: item.taskName,
+        prompt: item.prompt,
+        status: 'pending',
+        order: baseOrder + i,
+        createdAt: new Date().toISOString(),
+        startedAt: null,
+        completedAt: null,
+        output: ''
+      };
+
+      tasksRef.value.push(task);
+      results.push({ success: true, task });
+    }
+
+    saveTasks(tasksRef.value, currentWorkspaceRef.value);
+    const successCount = results.filter(r => r.success).length;
+    console.log(`[Task] Batch created ${successCount}/${tasks.length} tasks`);
+
+    broadcast('tasks:batch-created', { count: successCount });
+    res.json({ success: true, results });
+  });
+
   router.put('/:key/status', (req, res) => {
     const { key } = req.params;
     const { status } = req.body;
