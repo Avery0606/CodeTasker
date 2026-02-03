@@ -19,8 +19,10 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useWorkspace } from '../composables/useWorkspace'
+import { useTaskStore } from '../stores/taskStore'
 
 const { workspacePath, setWorkspace } = useWorkspace()
+const taskStore = useTaskStore()
 const pathInput = ref('')
 const loading = ref(false)
 
@@ -68,6 +70,7 @@ onMounted(async () => {
     const data = await res.json()
     if (data.path) {
       setWorkspace(data.path)
+      await taskStore.loadTasks()
     }
   } catch (e) {
     console.log('No workspace selected')

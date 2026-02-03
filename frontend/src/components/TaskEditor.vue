@@ -66,7 +66,7 @@ async function save() {
   try {
     const url = isEdit.value
       ? `/api/tasks/${props.task.uniqueKey}`
-      : '/api/tasks'
+      : '/api/tasks/create'
     const method = isEdit.value ? 'PUT' : 'POST'
 
     const res = await fetch(url, {

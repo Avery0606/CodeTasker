@@ -51,7 +51,7 @@
       <el-empty v-if="tasks.length === 0" description="暂无任务，请新建任务" />
     </div>
 
-    <TaskEditor v-model="editorVisible" :task="editingTask" @saved="loadTasks" />
+    <TaskEditor v-model="editorVisible" :task="editingTask" />
   </div>
 </template>
 

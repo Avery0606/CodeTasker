@@ -84,10 +84,11 @@ app.get('/api/workspace', (req, res) => {
 });
 
 app.get('/api/tasks', (req, res) => {
+  tasks = loadTasks();
   res.json({ tasks });
 });
 
-app.post('/api/tasks', (req, res) => {
+app.post('/api/tasks/create', (req, res) => {
   const { name, prompt } = req.body;
   const task = {
     uniqueKey: generateKey(),
@@ -104,6 +105,22 @@ app.post('/api/tasks', (req, res) => {
   saveTasks();
   broadcast('task:created', task);
   res.json(task);
+});
+
+app.put('/api/tasks/order', (req, res) => {
+  const { orderedKeys } = req.body;
+  const newTasks = [];
+  orderedKeys.forEach(key => {
+    const task = tasks.find(t => t.uniqueKey === key);
+    if (task) {
+      task.order = newTasks.length;
+      newTasks.push(task);
+    }
+  });
+  tasks = newTasks;
+  saveTasks();
+  broadcast('tasks:reordered', { tasks });
+  res.json({ success: true });
 });
 
 app.put('/api/tasks/:key', (req, res) => {
@@ -130,22 +147,6 @@ app.delete('/api/tasks/:key', (req, res) => {
   tasks.forEach((t, i) => t.order = i);
   saveTasks();
   broadcast('task:deleted', { key });
-  res.json({ success: true });
-});
-
-app.put('/api/tasks/order', (req, res) => {
-  const { orderedKeys } = req.body;
-  const newTasks = [];
-  orderedKeys.forEach(key => {
-    const task = tasks.find(t => t.uniqueKey === key);
-    if (task) {
-      task.order = newTasks.length;
-      newTasks.push(task);
-    }
-  });
-  tasks = newTasks;
-  saveTasks();
-  broadcast('tasks:reordered', { tasks });
   res.json({ success: true });
 });
 

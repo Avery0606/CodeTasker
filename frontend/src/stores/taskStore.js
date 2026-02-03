@@ -39,7 +39,7 @@ export const useTaskStore = defineStore('tasks', () => {
 
   async function addTask(name, prompt) {
     try {
-      const res = await fetch('/api/tasks', {
+      const res = await fetch('/api/tasks/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, prompt })
