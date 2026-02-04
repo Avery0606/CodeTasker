@@ -51,10 +51,19 @@ const props = defineProps({
   tasks: {
     type: Array,
     default: () => ([])
+  },
+  modelValue: {
+    type: String,
+    default: null
   }
 })
 
-const selectedTaskKey = ref(null)
+const emit = defineEmits(['update:modelValue'])
+
+const selectedTaskKey = computed({
+  get: () => props.modelValue,
+  set: (val) => emit('update:modelValue', val)
+})
 const consoleContainerRef = ref(null)
 
 const taskOptions = computed(() => {

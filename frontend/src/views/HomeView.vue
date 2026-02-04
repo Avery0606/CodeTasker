@@ -1,13 +1,13 @@
 <template>
   <div class="home-view">
     <el-row :gutter="20">
-      <el-col :span="12">
-        <SettingsPanel />
-        <TaskQueue ref="taskQueueRef" />
-      </el-col>
-      <el-col :span="12">
-        <ConsolePanel :task-outputs="taskOutputsMap" :tasks="tasksFromStore" />
-      </el-col>
+<el-col :span="12">
+          <SettingsPanel />
+          <TaskQueue ref="taskQueueRef" v-model="selectedTaskKey" />
+        </el-col>
+        <el-col :span="12">
+          <ConsolePanel :task-outputs="taskOutputsMap" :tasks="tasksFromStore" v-model="selectedTaskKey" />
+        </el-col>
     </el-row>
   </div>
 </template>
@@ -24,6 +24,7 @@ const taskQueueRef = ref(null)
 const taskStore = useTaskStore()
 const { tasks: tasksFromStore, queueRunning } = storeToRefs(taskStore)
 const taskOutputsMap = reactive({})
+const selectedTaskKey = ref(null)
 
 let ws = null
 

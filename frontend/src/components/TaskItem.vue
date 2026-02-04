@@ -1,5 +1,5 @@
 <template>
-  <el-card class="task-item" :class="task.status">
+  <el-card class="task-item" :class="[task.status, { selected }]" @click="handleCardClick">
     <div class="task-header">
       <el-tag :type="statusType" size="small" effect="dark">{{ statusText }}</el-tag>
       <div class="task-actions">
@@ -24,10 +24,11 @@ import { computed } from 'vue'
 
 const props = defineProps({
   task: Object,
-  index: Number
+  index: Number,
+  selected: Boolean
 })
 
-const emit = defineEmits(['edit', 'remove'])
+const emit = defineEmits(['edit', 'remove', 'click'])
 
 const statusType = computed(() => {
   switch (props.task.status) {
@@ -61,6 +62,10 @@ function edit() {
 function remove() {
   emit('remove', props.task)
 }
+
+function handleCardClick() {
+  emit('click')
+}
 </script>
 
 <style scoped>
@@ -83,7 +88,16 @@ function remove() {
   border-left: 3px solid #67c23a;
 }
 
+.task-item.selected {
+  border-color: #409eff;
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.3);
+}
+
 .task-item.failed {
+  border-left: 3px solid #f56c6c;
+}
+
+.task-item.failed.selected {
   border-left: 3px solid #f56c6c;
 }
 

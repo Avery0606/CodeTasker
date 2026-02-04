@@ -46,6 +46,8 @@
           <TaskItem
             :task="element"
             :index="index"
+            :selected="props.modelValue === element.uniqueKey"
+            @click="handleTaskClick(element.uniqueKey)"
             @edit="editTask"
             @remove="removeTask"
           />
@@ -76,6 +78,15 @@ const { workspaceReady } = useWorkspace()
 const taskStore = useTaskStore()
 const { tasks, localTasks, queueRunning, concurrency } = storeToRefs(taskStore)
 const { loadTasks, startQueue, stopQueue, reorderTasks, updateLocalTasks } = taskStore
+
+const props = defineProps({
+  modelValue: {
+    type: String,
+    default: null
+  }
+})
+
+const emit = defineEmits(['update:modelValue'])
 
 const editorVisible = ref(false)
 const editingTask = ref(null)
@@ -123,6 +134,10 @@ async function onDragEnd() {
     ElMessage.error('排序保存失败')
     loadTasks()
   }
+}
+
+function handleTaskClick(key) {
+  emit('update:modelValue', key)
 }
 
 onMounted(loadTasks)
